@@ -410,15 +410,15 @@ function parser.pif()
 
 	if not ast.ifs[1] then return false end
 
-	local peek = lex:extract()
+	local tok = lex:extract()
 
-	while peek[1] == "elseif" do
+	while tok and tok[1] == "elseif" do
 		ast.ifs[#ast.ifs + 1] = pconbody("if", {"elseif", "else", "end"})
 
-		peek = lex:extract()
+		tok = lex:extract()
 	end
 
-	if peek[1] == "else" then
+	if tok and tok[1] == "else" then
 		ast.default = parser.block({"end"})
 		lex:extract()
 
