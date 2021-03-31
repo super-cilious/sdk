@@ -9,11 +9,11 @@ fn abs { v -- absv }
 end
 
 fn max { n1 n2 -- maxv }
-	if (n2@ n1@ >) n2@ maxv! end else n1@ maxv! end
+	if (n2@ n1@ >) n2@ maxv! else n1@ maxv! end
 end
 
 fn min { n1 n2 -- minv }
-	if (n2@ n1@ <) n2@ minv! end else n1@ minv! end
+	if (n2@ n1@ <) n2@ minv! else n1@ minv! end
 end
 
 fn iserr { n -- err }
@@ -29,7 +29,7 @@ fn addoverflow { n1 n2 -- overflow res }
 		if (n2@ 0x7FFFFFFF n1@ - s>)
 			1 overflow!
 		end
-	end else
+	else
 		if (n2@ 0x80000000 n1@ - s<)
 			1 overflow!
 		end

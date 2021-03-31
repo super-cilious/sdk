@@ -66,7 +66,7 @@ fn private ZeroPad { fd num pad base -- }
 
 	if (num@ 0 ==)
 		1 d!
-	end else
+	else
 		while (num@)
 			1 d +=
 
@@ -101,7 +101,7 @@ fn VFPrintf { argvt argcn fmt fd -- }
 		fmt@ i@ + gb char!
 		if (char@ '%' ~=)
 			fd@ char@ FPutc
-		end else
+		else
 			1 i +=
 			if (i@ sl@ >=)
 				return
@@ -161,7 +161,7 @@ fn VFPrintf { argvt argcn fmt fd -- }
 				end
 
 				4 a +=
-			end elseif (char@ 'x' ==)
+			elseif (char@ 'x' ==)
 				if (zero@)
 					fd@ q@ pad@ 16 ZeroPad
 					0 pad!
@@ -176,7 +176,7 @@ fn VFPrintf { argvt argcn fmt fd -- }
 				end
 
 				4 a +=
-			end elseif (char@ 's' ==)
+			elseif (char@ 's' ==)
 				fd@ q@ FPuts
 				
 				if (pad@)
@@ -188,7 +188,7 @@ fn VFPrintf { argvt argcn fmt fd -- }
 				end
 
 				4 a +=
-			end elseif (char@ 'l' ==)
+			elseif (char@ 'l' ==)
 				fd@ q@ FPutc
 
 				if (pad@)
@@ -196,7 +196,7 @@ fn VFPrintf { argvt argcn fmt fd -- }
 				end
 
 				4 a +=
-			end elseif (char@ 'i' ==)
+			elseif (char@ 'i' ==)
 				q@ fd@ Puti fl!
 
 				if (pad@)

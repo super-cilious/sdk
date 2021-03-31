@@ -362,7 +362,7 @@ function parser.auto()
 	return true
 end
 
-local function pconbody(name)
+local function pconbody(name, endtok)
 	local t, ok = lex:expect("keyc")
 
 	if not ok then
@@ -377,15 +377,20 @@ local function pconbody(name)
 
 	local ast = node_t(name.."_cb", lex:peek())
 
-	ast.conditional = parser.block(")")
-
+	ast.conditional = parser.block({")"})
+	lex:extract()
 	if not ast.conditional then return false end
 
 	if name == "while" then
 		currentfn.wdepth = currentfn.wdepth + 1
 	end
 
-	ast.body = parser.block("end")
+	ast.body = parser.block(endtok or {"end"})
+	-- since *you* did name == "while", im going to put this here
+	-- ifs check which endtok was used
+	if name ~= "if" then
+		lex:extract()
+	end
 
 	if name == "while" then
 		currentfn.wdepth = currentfn.wdepth - 1
@@ -401,34 +406,21 @@ function parser.pif()
 
 	ast.ifs = {}
 
-	ast.ifs[1] = pconbody("if")
+	ast.ifs[1] = pconbody("if", {"elseif", "else", "end"})
 
 	if not ast.ifs[1] then return false end
 
-	local peek = lex:peek()
-
-	if not peek then
-		return ast
-	end
+	local peek = lex:extract()
 
 	while peek[1] == "elseif" do
-		lex:extract()
+		ast.ifs[#ast.ifs + 1] = pconbody("if", {"elseif", "else", "end"})
 
-		ast.ifs[#ast.ifs + 1] = pconbody("if")
-
-		peek = lex:peek()
-
-		if not peek then
-			return ast
-		end
+		peek = lex:extract()
 	end
 
-	peek = lex:peek()
-
-	if peek and (peek[1] == "else") then
+	if peek[1] == "else" then
+		ast.default = parser.block({"end"})
 		lex:extract()
-
-		ast.default = parser.block("end")
 
 		if not ast.default then return ast end
 	end
@@ -464,7 +456,8 @@ end
 function parser.index()
 	local ast = node_t("index", lex:peek())
 
-	ast.block = parser.block("]")
+	ast.block = parser.block({"]"})
+	lex:extract()
 
 	if not ast.block then return false end
 
@@ -480,6 +473,15 @@ function parser.index()
 	return ast
 end
 
+local function exists(x, arr)
+	for i, v in ipairs(arr) do
+		if x == v then
+			return true
+		end
+	end
+
+	return false
+end
 
 function parser.block(endtok, defines)
 	local ast = node_t("block", lex:peek())
@@ -490,14 +492,16 @@ function parser.block(endtok, defines)
 
 	local b = ast.block
 
-	local t = lex:extract()
+	local t = lex:peek()
 
 	if not t then
 		lerror(t, "no block")
 		return false
 	end
 
-	while t[1] ~= endtok do
+	while not exists(t[1], endtok) do
+		lex:extract()
+
 		local ident = t[1]
 
 		if ident == "if" then
@@ -537,7 +541,7 @@ function parser.block(endtok, defines)
 			b[#b + 1] = node_t("lazy", t, t)
 		end
 
-		t = lex:extract()
+		t = lex:peek()
 
 		if not t then
 			lerror(t, "unfinished block")
@@ -635,7 +639,8 @@ function parser.fn(defonly)
 		end
 	end
 
-	ast.block = parser.block("end")
+	ast.block = parser.block({"end"})
+	lex:extract()
 
 	if not ast.block then
 		return false
@@ -689,7 +694,8 @@ function parser.constant(poa, str, noblock)
 			return false
 		end
 
-		local ast = parser.block(")")
+		local ast = parser.block({")"})
+		lex:extract()
 
 		if not ast then
 			return false
